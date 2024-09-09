@@ -1,0 +1,27 @@
+server:
+  port: ":8080"       # Порт, на котором будет запускаться сервер
+
+database:
+  host: "insert_your_data"   # Адрес базы данных
+  port: 5432          # Порт базы данных
+  user: "insert_your_data"    # Имя пользователя базы данных
+  password: "insert_your_data"  # Пароль пользователя базы данных
+  dbname: "insert_your_data"    # Имя базы данных
+  sslmode: "disable"
+  
+
+#может быть и не нужно это
+logger:
+  output: "stdout"  # Куда выводить логи: stdout или же file
+  filepath: ""      # Путь где будут храниться логи, если выбран output "file"
+  level: "debug"     # Уровни логирования: "debug", "info", "warn", "error"
+
+#jwt token string
+jwt:
+  jwtkey: "insert_your_data" #Ваш секретный ключ для создания токенов
+
+smtp_mail:
+  smtp_domain: "live.smtp.mailtrap.io"   # Домен smtp сервера, который отрпавляет письма
+  user: "insert_your_data"         # Ваш юзернейм на smtp сервере
+  apikey: "insert_your_data"    # Либо пароль, либо апи ключ smtp сервера
+  mail_sender: "mailtrap@demomailtrap.com"  # Почта отправителя
