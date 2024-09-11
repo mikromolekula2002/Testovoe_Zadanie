@@ -28,11 +28,12 @@ type Config struct {
 	Jwt struct {
 		JwtKey string `yaml:"jwtkey"`
 	} `yaml:"jwt"`
-	SMTP_Mail struct {
-		SMTPDomain string `yaml:"smtp_domain"`
-		User       string `yaml:"user"`
-		ApiKey     string `yaml:"apikey"`
-		MailSender string `yaml:"mail_sender"`
+	SMTP struct {
+		Auth_address   string `yaml:"smtp_auth_address"`
+		Server_address string `yaml:"smtp_server_address"`
+		Name           string `yaml:"smtp_name"`
+		Email_address  string `yaml:"smtp_email_address"`
+		Email_password string `yaml:"smtp_email_password"`
 	} `yaml:"smtp_mail"`
 }
 

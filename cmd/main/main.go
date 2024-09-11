@@ -26,7 +26,11 @@ func main() {
 	}
 
 	//инициализация смпт сервера для отправки Email Warning
-	smtp := mail_send.Init(cfg.SMTP_Mail.SMTPDomain, cfg.SMTP_Mail.User, cfg.SMTP_Mail.ApiKey, cfg.SMTP_Mail.MailSender)
+	smtp := mail_send.NewGmailSender(cfg.SMTP.Name,
+		cfg.SMTP.Email_address,
+		cfg.SMTP.Email_password,
+		cfg.SMTP.Server_address,
+		cfg.SMTP.Auth_address)
 
 	//инициализация jwt сервиса
 	jwtService := jwt_service.InitJWT()

@@ -20,8 +20,10 @@ logger:
 jwt:
   jwtkey: "insert_your_data" #Ваш секретный ключ для создания токенов
 
+#Сервис отправки Email Warning
 smtp_mail:
-  smtp_domain: "live.smtp.mailtrap.io"   # Домен smtp сервера, который отрпавляет письма
-  user: "insert_your_data"         # Ваш юзернейм на smtp сервере
-  apikey: "insert_your_data"    # Либо пароль, либо апи ключ smtp сервера
-  mail_sender: "mailtrap@demomailtrap.com"  # Почта отправителя
+  smtp_auth_address:   "smtp.gmail.com" #Google mail smtp address(оставить так как есть, если почта google)
+  smtp_server_address: "smtp.gmail.com:587" #Google mail auth smtp address(оставить так как есть, если почта google)
+  smtp_name: "Auth Service API" #Имя отправителя, которое будет видеть получатель
+  smtp_email_address: "insert_your_data" #Адрес отправителя
+  smtp_email_password:  "insert_your_data" #16-значный код при работе с Google mail, с другой почтой может быть просто ваш пароль

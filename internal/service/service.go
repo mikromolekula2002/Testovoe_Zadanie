@@ -14,19 +14,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const EmailReceiver = "kortymalik@gmail.com" //вводите свою почту для проверки рассылки
+const (
+	Subject = "Email Warning"
+	Content = "Ваш токен пытались получить с другого ip адресса, если это были не вы, свяжитесь с нами."
+)
+
+var (
+	EmailRecipient = []string{"kortymalik@gmail.com"} //вводите свою почту для проверки рассылки
+)
 
 // Основная структура для работы сервисного слоя
 type Service struct {
 	log        *logrus.Logger
 	repo       repo.TokenRepo
 	jwtService jwt_service.JWTService
-	smtp       mail_send.Smtp
+	smtp       mail_send.EmailSender
 	jwtKey     []byte
 }
 
 // Инит нашей структуры с базой данных, смпт сервером и сервисом jwt
-func ServiceInit(logger *logrus.Logger, repo repo.TokenRepo, jwt jwt_service.JWTService, smtp mail_send.Smtp, jwtkey []byte) *Service {
+func ServiceInit(logger *logrus.Logger, repo repo.TokenRepo, jwt jwt_service.JWTService, smtp mail_send.EmailSender, jwtkey []byte) *Service {
 	return &Service{
 		log:        logger,
 		repo:       repo,
@@ -99,7 +106,7 @@ func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress stri
 
 	// Проверка IP адреса, если ip адресс отличается отправка варна на почту
 	if tokenStruct.IPAdress != IpAdress {
-		err := s.smtp.SendEmailWarn(EmailReceiver)
+		err := s.smtp.SendEmail(Subject, Content, EmailRecipient)
 		if err != nil {
 			s.log.Error(err)
 		}
