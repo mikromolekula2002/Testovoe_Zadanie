@@ -49,7 +49,9 @@ func CreateTable(db *sql.DB) {
         id SERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         token_hash VARCHAR(255) NOT NULL UNIQUE,
+		blocked boolean NOT NULL DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		expires_at TIMESTAMP NOT NULL,
         ip_adress VARCHAR(255) NOT NULL
     );`
 	_, err := db.Exec(query)

@@ -27,3 +27,8 @@ smtp_mail:
   smtp_name: "Auth Service API" #Имя отправителя, которое будет видеть получатель
   smtp_email_address: "insert_your_data" #Адрес отправителя
   smtp_email_password:  "insert_your_data" #16-значный код при работе с Google mail, с другой почтой может быть просто ваш пароль
+
+#Время жизни токенов
+tokens:
+  access_token_duration: 15 #Время жизни access token в минутах
+  refresh_token_duration: 24 #Время жизни refresh token в часах

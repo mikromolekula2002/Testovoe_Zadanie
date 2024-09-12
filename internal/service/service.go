@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/mikromolekula2002/Testovoe/internal/errors"
 	"github.com/mikromolekula2002/Testovoe/internal/jwt_service"
@@ -25,21 +26,32 @@ var (
 
 // Основная структура для работы сервисного слоя
 type Service struct {
-	log        *logrus.Logger
-	repo       repo.TokenRepo
-	jwtService jwt_service.JWTService
-	smtp       mail_send.EmailSender
-	jwtKey     []byte
+	log                  *logrus.Logger
+	repo                 repo.TokenRepo
+	jwtService           jwt_service.JWTService
+	smtp                 mail_send.EmailSender
+	jwtKey               []byte
+	accessTokenDuration  int
+	refreshTokenDuration int
 }
 
 // Инит нашей структуры с базой данных, смпт сервером и сервисом jwt
-func ServiceInit(logger *logrus.Logger, repo repo.TokenRepo, jwt jwt_service.JWTService, smtp mail_send.EmailSender, jwtkey []byte) *Service {
+func ServiceInit(logger *logrus.Logger,
+	repo repo.TokenRepo,
+	jwt jwt_service.JWTService,
+	smtp mail_send.EmailSender,
+	jwtkey []byte,
+	accesstokenDuration int,
+	refreshtokenDuration int) *Service {
 	return &Service{
-		log:        logger,
-		repo:       repo,
-		jwtService: jwt,
-		smtp:       smtp,
-		jwtKey:     jwtkey,
+
+		log:                  logger,
+		repo:                 repo,
+		jwtService:           jwt,
+		smtp:                 smtp,
+		jwtKey:               jwtkey,
+		accessTokenDuration:  accesstokenDuration,
+		refreshTokenDuration: refreshtokenDuration,
 	}
 }
 
@@ -47,11 +59,17 @@ func ServiceInit(logger *logrus.Logger, repo repo.TokenRepo, jwt jwt_service.JWT
 func (s *Service) CreateTokens(UserID string, ipAdress string) (string, string, error) {
 	// проверка на пустого пользователя из параметров запроса
 	if UserID == "" {
+		s.log.Error("CreateTokens - пустой UserID")
 		return "", "", errors.ErrMissingUserID
 	}
 
+	if ipAdress == "" {
+		s.log.Error("CreateTokens - пустой IP Address")
+		return "", "", errors.ErrWrongIP
+	}
+
 	// создание access token
-	AccessToken, err := s.jwtService.GenerateAccessToken(UserID, ipAdress, s.jwtKey)
+	AccessToken, err := s.jwtService.GenerateAccessToken(UserID, ipAdress, s.jwtKey, s.accessTokenDuration)
 	if err != nil {
 		s.log.Error(err)
 		return "", "", errors.ErrServer
@@ -69,6 +87,8 @@ func (s *Service) CreateTokens(UserID string, ipAdress string) (string, string, 
 		UserID:    UserID,
 		TokenHash: hashedToken,
 		IPAdress:  ipAdress,
+		CreatedAt: (time.Now()),
+		ExpiresAt: (time.Now().Add(time.Duration(s.refreshTokenDuration) * time.Hour)),
 	}
 
 	// сохраняем хеш resfresh token в базу данных postgreSQL
@@ -97,6 +117,16 @@ func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress stri
 		return "", errors.ErrMissingToken
 	}
 
+	if time.Now().After(tokenStruct.ExpiresAt) {
+		s.log.Errorf("%s: Срок действия refresh token истек", op)
+		return "", errors.ErrExpiredToken
+	}
+
+	if tokenStruct.Blocked {
+		s.log.Errorf("%s: Рефреш токен заблокирован", op)
+		return "", errors.ErrBlockedToken
+	}
+
 	// Сравнение полученного Refresh токена с сохраненным хешем
 	err = bcrypt.CompareHashAndPassword([]byte(tokenStruct.TokenHash), []byte(RefreshToken))
 	if err != nil {
@@ -113,7 +143,7 @@ func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress stri
 	}
 
 	// Генерация нового Access токена
-	newAccessToken, err := s.jwtService.GenerateAccessToken(UserID, IpAdress, s.jwtKey)
+	newAccessToken, err := s.jwtService.GenerateAccessToken(UserID, IpAdress, s.jwtKey, s.accessTokenDuration)
 	if err != nil {
 		s.log.Error(err)
 		return "", errors.ErrServer

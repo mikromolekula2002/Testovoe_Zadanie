@@ -3,23 +3,25 @@ package mail_send
 import (
 	"testing"
 
-	"github.com/mikromolekula2002/Testovoe/internal/config"
 	"github.com/stretchr/testify/require"
 )
 
 const (
+	Name           = "Auth Service API"
+	Email_address  = "INSERT"
+	Email_password = "INSERT"
+	Auth_address   = "smtp.gmail.com"
+	Server_address = "smtp.gmail.com:587"
 	EmailRecipient = "kortymalik@gmail.com" //replace to your mail
 )
 
 func TestSendEmailWithGmail(t *testing.T) {
-	//Загрузка конфига
-	cfg := config.LoadConfig("./config/config.yaml")
 
-	sender := NewGmailSender(cfg.SMTP.Name,
-		cfg.SMTP.Email_address,
-		cfg.SMTP.Email_password,
-		cfg.SMTP.Auth_address,
-		cfg.SMTP.Server_address)
+	sender := NewGmailSender(Name,
+		Email_address,
+		Email_password,
+		Auth_address,
+		Server_address)
 
 	subject := "A test email"
 	content := `

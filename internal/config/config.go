@@ -35,6 +35,10 @@ type Config struct {
 		Email_address  string `yaml:"smtp_email_address"`
 		Email_password string `yaml:"smtp_email_password"`
 	} `yaml:"smtp_mail"`
+	Token struct {
+		AccessTokenDuration  int `yaml:"access_token_duration"`
+		RefreshTokenDuration int `yaml:"refresh_token_duration"`
+	}
 }
 
 // LoadConfig - функция для загрузки конфигурации из YAML файла

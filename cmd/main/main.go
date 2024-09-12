@@ -17,7 +17,7 @@ func main() {
 	//Загрузка конфига
 	cfg := config.LoadConfig("./config/config.yaml")
 	// Инициализация базы данных
-	logger := logger.Init(cfg)
+	logger := logger.Init(cfg.Logger.Level, cfg.Logger.FilePath, cfg.Logger.Output)
 
 	//инициализация репозитория
 	repo, err := repo.InitDB(cfg)
@@ -36,7 +36,13 @@ func main() {
 	jwtService := jwt_service.InitJWT()
 
 	//инициализация сервисного слоя
-	service := service.ServiceInit(logger.Logrus, repo, jwtService, smtp, []byte(cfg.Jwt.JwtKey))
+	service := service.ServiceInit(logger.Logrus,
+		repo,
+		jwtService,
+		smtp,
+		[]byte(cfg.Jwt.JwtKey),
+		cfg.Token.AccessTokenDuration,
+		cfg.Token.RefreshTokenDuration)
 
 	// инициализация сервера
 	server := server.Init(cfg.Server.Port, service)

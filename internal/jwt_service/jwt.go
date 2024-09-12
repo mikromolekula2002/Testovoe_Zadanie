@@ -10,7 +10,7 @@ import (
 type JWTManager struct{}
 
 type JWTService interface {
-	GenerateAccessToken(userID, ipAddress string, secretKey []byte) (string, error)
+	GenerateAccessToken(userID, ipAddress string, secretKey []byte, timeDuration int) (string, error)
 }
 
 // JWT claims с IPAdress и UserID
@@ -26,13 +26,14 @@ func InitJWT() *JWTManager {
 }
 
 // generateAccessToken создает новый Access токен
-func (j *JWTManager) GenerateAccessToken(userID, ipAddress string, secretKey []byte) (string, error) {
+func (j *JWTManager) GenerateAccessToken(userID, ipAddress string, secretKey []byte, timeDuration int) (string, error) {
 	op := "jwt_service.GenerateAccessToken"
+
 	claims := &Claims{
 		UserID:    userID,
 		IPAddress: ipAddress,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)), // Токен истекает через 15 минут
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(timeDuration) * time.Minute)), // Токен истекает через 15 минут
 		},
 	}
 
