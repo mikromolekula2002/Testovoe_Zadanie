@@ -11,4 +11,5 @@ var (
 	ErrExpiredToken  = errors.New("срок действия сессии истёк")
 	ErrBlockedToken  = errors.New("ссесия заблокирована")
 	ErrWrongIP       = errors.New("ip address не распознан, попробуйте еще раз")
+	ErrValidToken    = errors.New("похоже на то, что Access Token был подделан")
 )

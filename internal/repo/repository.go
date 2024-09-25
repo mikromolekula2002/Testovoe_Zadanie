@@ -16,6 +16,7 @@ type RepoPostgre struct {
 type TokenRepo interface {
 	SaveRefreshToken(refreshToken *models.RefreshToken) error
 	GetRefreshToken(UserID string) (*models.RefreshToken, error)
+	UpdateRefreshToken(refreshToken *models.RefreshToken) error
 }
 
 // initDB инициализирует соединение с базой данных PostgreSQL
@@ -70,4 +71,22 @@ func (r *RepoPostgre) GetRefreshToken(UserID string) (*models.RefreshToken, erro
 	}
 
 	return &refreshToken, nil
+}
+
+// Обновление данных рефреш токена
+func (r *RepoPostgre) UpdateRefreshToken(refreshToken *models.RefreshToken) error {
+	op := "repo.UpdateRefreshToken"
+
+	// Попытка обновить запись с существующим значением поля
+	result := r.DB.Model(&models.RefreshToken{}).Where("token_hash = ?", refreshToken.TokenHash).Updates(refreshToken)
+	if result.Error != nil {
+		return fmt.Errorf("%s - Ошибка обновления RefreshToken: \n%v", op, result.Error)
+	}
+
+	// Проверка, что хотя бы одна строка была обновлена
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("%s - Запись для обновления не найдена", op)
+	}
+
+	return nil
 }

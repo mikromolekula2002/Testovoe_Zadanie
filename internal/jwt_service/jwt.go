@@ -11,6 +11,7 @@ type JWTManager struct{}
 
 type JWTService interface {
 	GenerateAccessToken(userID, ipAddress string, secretKey []byte, timeDuration int) (string, error)
+	CheckoutAccessToken(accessToken string, secretKey []byte) (*Claims, error)
 }
 
 // JWT claims с IPAdress и UserID
@@ -44,4 +45,20 @@ func (j *JWTManager) GenerateAccessToken(userID, ipAddress string, secretKey []b
 		return "", fmt.Errorf("%s: \n%v", op, err)
 	}
 	return accessToken, nil
+}
+
+func (j *JWTManager) CheckoutAccessToken(accessToken string, secretKey []byte) (*Claims, error) {
+	op := "jwt_service.CheckoutAccessToken"
+
+	token, err := jwt.ParseWithClaims(accessToken, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: \n%v", op, err)
+	}
+	claims, ok := token.Claims.(*Claims)
+	if !ok {
+		return nil, fmt.Errorf("%s: \n%v", op, err)
+	}
+	return claims, nil
 }

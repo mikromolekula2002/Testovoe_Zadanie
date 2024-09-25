@@ -66,11 +66,12 @@ func (s *Server) GetTokens(c echo.Context) error {
 // Обработчик маршрута /refreshToken
 func (s *Server) RefreshToken(c echo.Context) error {
 	refreshToken := c.FormValue("refresh_token")
+	accessToken := c.FormValue("access_token")
 	userID := c.FormValue("user_id")
 	ipAddress := c.RealIP()
 
 	// запуск сервисного слоя
-	newAccessToken, err := s.Svc.RefreshToken(userID, refreshToken, ipAddress)
+	newAccessToken, err := s.Svc.RefreshToken(userID, refreshToken, ipAddress, accessToken)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"access_token":  "nil",

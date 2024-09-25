@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	jwt_service "github.com/mikromolekula2002/Testovoe/internal/jwt_service"
 )
 
 // MockJWTService is a mock of JWTService interface.
@@ -31,6 +32,21 @@ func NewMockJWTService(ctrl *gomock.Controller) *MockJWTService {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockJWTService) EXPECT() *MockJWTServiceMockRecorder {
 	return m.recorder
+}
+
+// CheckoutAccessToken mocks base method.
+func (m *MockJWTService) CheckoutAccessToken(accessToken string, secretKey []byte) (*jwt_service.Claims, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckoutAccessToken", accessToken, secretKey)
+	ret0, _ := ret[0].(*jwt_service.Claims)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckoutAccessToken indicates an expected call of CheckoutAccessToken.
+func (mr *MockJWTServiceMockRecorder) CheckoutAccessToken(accessToken, secretKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckoutAccessToken", reflect.TypeOf((*MockJWTService)(nil).CheckoutAccessToken), accessToken, secretKey)
 }
 
 // GenerateAccessToken mocks base method.

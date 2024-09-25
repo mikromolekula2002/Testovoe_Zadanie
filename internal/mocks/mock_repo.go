@@ -62,3 +62,17 @@ func (mr *MockTokenRepoMockRecorder) SaveRefreshToken(refreshToken interface{}) 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveRefreshToken", reflect.TypeOf((*MockTokenRepo)(nil).SaveRefreshToken), refreshToken)
 }
+
+// UpdateRefreshToken mocks base method.
+func (m *MockTokenRepo) UpdateRefreshToken(refreshToken *models.RefreshToken) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateRefreshToken", refreshToken)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateRefreshToken indicates an expected call of UpdateRefreshToken.
+func (mr *MockTokenRepoMockRecorder) UpdateRefreshToken(refreshToken interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRefreshToken", reflect.TypeOf((*MockTokenRepo)(nil).UpdateRefreshToken), refreshToken)
+}

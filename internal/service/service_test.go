@@ -161,15 +161,23 @@ func TestRefreshToken(t *testing.T) {
 	if err != nil {
 		logger.Logrus.Error("ошибка создания хеш пароля")
 	}
+
+	accessToken, err := serviceTest.jwtService.GenerateAccessToken("UserID", "testIP", []byte("secretKey"), serviceTest.accessTokenDuration)
+	if err != nil {
+		logger.Logrus.Error("ошибка создания accessToken")
+	}
+
 	// Определите таблицу тестов
 	testTable := struct {
 		userID           string
 		refreshToken     string
+		accessToken      string
 		ipAddress        string
 		refreshTokenData *models.RefreshToken
 	}{
 		userID:       "UserID",
 		refreshToken: "TestRefresh",
+		accessToken:  accessToken,
 		ipAddress:    "testIP",
 		refreshTokenData: &models.RefreshToken{
 			ID:        24,
@@ -185,7 +193,7 @@ func TestRefreshToken(t *testing.T) {
 	mockRepo.EXPECT().GetRefreshToken(gomock.Any()).Return(testTable.refreshTokenData, nil)
 	mockJWT.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("TestToken", nil)
 
-	access, err := serviceTest.RefreshToken(testTable.userID, testTable.refreshToken, testTable.ipAddress)
+	access, err := serviceTest.RefreshToken(testTable.userID, testTable.refreshToken, testTable.ipAddress, testTable.accessToken)
 	require.NoError(t, err)
 	require.NotEmpty(t, access)
 	require.Equal(t, "TestToken", access, "Access Token должен совпадать")
@@ -214,11 +222,17 @@ func TestRefreshTokenErrors(t *testing.T) {
 		logger.Logrus.Error("ошибка создания хеш пароля")
 	}
 
+	accessToken, err := serviceTest.jwtService.GenerateAccessToken("UserID", "testIP", []byte("secretKey"), serviceTest.accessTokenDuration)
+	if err != nil {
+		logger.Logrus.Error("ошибка создания accessToken")
+	}
+
 	// Определите таблицу тестов
 	testTable := []struct {
 		testName         string
 		userID           string
 		refreshToken     string
+		accessToken      string
 		ipAddress        string
 		refreshTokenData *models.RefreshToken
 		expectedError    error
@@ -227,6 +241,7 @@ func TestRefreshTokenErrors(t *testing.T) {
 			testName:     "Expired Token",
 			userID:       "UserID",
 			refreshToken: "TestRefresh",
+			accessToken:  accessToken,
 			ipAddress:    "testIP",
 			refreshTokenData: &models.RefreshToken{
 				ID:        24,
@@ -243,6 +258,7 @@ func TestRefreshTokenErrors(t *testing.T) {
 			testName:     "Blocked Token",
 			userID:       "UserID",
 			refreshToken: "TestRefresh",
+			accessToken:  accessToken,
 			ipAddress:    "testIP",
 			refreshTokenData: &models.RefreshToken{
 				ID:        24,
@@ -259,6 +275,7 @@ func TestRefreshTokenErrors(t *testing.T) {
 			testName:     "Wrong Refresh Token",
 			userID:       "UserID",
 			refreshToken: "TestRefresh",
+			accessToken:  accessToken,
 			ipAddress:    "testIP",
 			refreshTokenData: &models.RefreshToken{
 				ID:        24,
@@ -281,7 +298,7 @@ func TestRefreshTokenErrors(t *testing.T) {
 				mockJWT.EXPECT().GenerateAccessToken(tt.userID, tt.ipAddress, gomock.Any(), gomock.Any()).Return("testToken", nil)
 			}
 
-			actualToken, err := serviceTest.RefreshToken(tt.userID, tt.refreshToken, tt.ipAddress)
+			actualToken, err := serviceTest.RefreshToken(tt.userID, tt.refreshToken, tt.ipAddress, tt.accessToken)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)

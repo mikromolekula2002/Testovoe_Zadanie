@@ -84,11 +84,12 @@ func (s *Service) CreateTokens(UserID string, ipAdress string) (string, string, 
 
 	// Сохранение хешированного Refresh токена в базу данных
 	token := models.RefreshToken{
-		UserID:    UserID,
-		TokenHash: hashedToken,
-		IPAdress:  ipAdress,
-		CreatedAt: (time.Now()),
-		ExpiresAt: (time.Now().Add(time.Duration(s.refreshTokenDuration) * time.Hour)),
+		UserID:      UserID,
+		TokenHash:   hashedToken,
+		AccessToken: AccessToken,
+		IPAdress:    ipAdress,
+		CreatedAt:   (time.Now()),
+		ExpiresAt:   (time.Now().Add(time.Duration(s.refreshTokenDuration) * time.Hour)),
 	}
 
 	// сохраняем хеш resfresh token в базу данных postgreSQL
@@ -102,7 +103,7 @@ func (s *Service) CreateTokens(UserID string, ipAdress string) (string, string, 
 }
 
 // Проверка refresh token и выдача нового access token
-func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress string) (string, error) {
+func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress string, accessToken string) (string, error) {
 	op := "service.RefreshToken"
 
 	// проверка на пустого пользователя из параметров запроса
@@ -115,6 +116,17 @@ func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress stri
 	if err != nil {
 		s.log.Error(err)
 		return "", errors.ErrMissingToken
+	}
+
+	claimsAccess, err := s.jwtService.CheckoutAccessToken(accessToken, s.jwtKey)
+	if err != nil {
+		return "", errors.ErrValidToken
+	} else if claimsAccess.UserID != UserID {
+		return "", errors.ErrValidToken
+	}
+
+	if tokenStruct.AccessToken != accessToken {
+		return "", errors.ErrValidToken
 	}
 
 	if time.Now().After(tokenStruct.ExpiresAt) {
@@ -144,6 +156,21 @@ func (s *Service) RefreshToken(UserID string, RefreshToken string, IpAdress stri
 
 	// Генерация нового Access токена
 	newAccessToken, err := s.jwtService.GenerateAccessToken(UserID, IpAdress, s.jwtKey, s.accessTokenDuration)
+	if err != nil {
+		s.log.Error(err)
+		return "", errors.ErrServer
+	}
+
+	// Сохранение хешированного Refresh токена в базу данных
+	token := models.RefreshToken{
+		UserID:      UserID,
+		AccessToken: newAccessToken,
+		TokenHash:   tokenStruct.TokenHash,
+		CreatedAt:   (time.Now()),
+	}
+
+	// сохраняем хеш resfresh token в базу данных postgreSQL
+	err = s.repo.UpdateRefreshToken(&token)
 	if err != nil {
 		s.log.Error(err)
 		return "", errors.ErrServer
