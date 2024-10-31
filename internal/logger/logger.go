@@ -6,11 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Logger struct {
-	Logrus *logrus.Logger
-}
-
-func Init(Level string, FilePath string, Output string) *Logger {
+func Init(Level string, FilePath string, Output string) *logrus.Logger {
 	logger := logrus.New()
 
 	// Устанавливаем уровень логирования
@@ -44,7 +40,5 @@ func Init(Level string, FilePath string, Output string) *Logger {
 	// Установка вывода логов в stdout
 	logger.SetOutput(os.Stdout)
 
-	return &Logger{
-		Logrus: logger,
-	}
+	return logger
 }

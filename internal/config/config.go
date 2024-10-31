@@ -26,7 +26,7 @@ type Config struct {
 		Level    string `yaml:"level"`
 	} `yaml:"logger"`
 	Jwt struct {
-		JwtKey string `yaml:"jwtkey"`
+		SecretKey string `yaml:"secret_key"`
 	} `yaml:"jwt"`
 	SMTP struct {
 		Auth_address   string `yaml:"smtp_auth_address"`
@@ -36,9 +36,10 @@ type Config struct {
 		Email_password string `yaml:"smtp_email_password"`
 	} `yaml:"smtp_mail"`
 	Token struct {
-		AccessTokenDuration  int `yaml:"access_token_duration"`
-		RefreshTokenDuration int `yaml:"refresh_token_duration"`
+		AccessTokenTimeDuration  int `yaml:"access_token_duration"`
+		RefreshTokenTimeDuration int `yaml:"refresh_token_duration"`
 	}
+	EnvType string `yaml:"env_type"`
 }
 
 // LoadConfig - функция для загрузки конфигурации из YAML файла

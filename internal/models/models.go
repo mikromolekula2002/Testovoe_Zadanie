@@ -2,14 +2,23 @@ package models
 
 import "time"
 
-// Модель для хранения Refresh токенов
-type RefreshToken struct {
-	ID          uint      `gorm:"primaryKey"`
-	UserID      string    `gorm:"not null"`
-	TokenHash   string    `gorm:"not null;unique"`
-	AccessToken string    `gorm:"not null;unique"`
-	Blocked     bool      `gorm:"NOT NULL DEFAULT false"`
-	CreatedAt   time.Time `gorm:"autoCreateTime"`
-	ExpiresAt   time.Time `gorm:"not null"`
-	IPAdress    string    `gorm:"not null"`
+type RefreshTokenData struct {
+	UserID       string    `json:"user_id"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	IPAddress    string    `json:"ip_adress"`
+}
+
+type CreateTokensRequest struct {
+	UsedID string `json:"user_id"`
+}
+
+type RefreshTokenRequest struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type CreateTokenResponse struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
 }

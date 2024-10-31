@@ -1,16 +1,21 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/mikromolekula2002/Testovoe/internal/config"
-	"github.com/mikromolekula2002/Testovoe/internal/jwt_service"
+	"github.com/mikromolekula2002/Testovoe/internal/controllers"
 	"github.com/mikromolekula2002/Testovoe/internal/logger"
-	"github.com/mikromolekula2002/Testovoe/internal/mail_send"
 	"github.com/mikromolekula2002/Testovoe/internal/repo"
-	"github.com/mikromolekula2002/Testovoe/internal/server"
-	"github.com/mikromolekula2002/Testovoe/internal/service"
+	"github.com/mikromolekula2002/Testovoe/internal/router"
+	"github.com/mikromolekula2002/Testovoe/internal/services"
 )
 
 func main() {
@@ -25,32 +30,48 @@ func main() {
 		log.Fatalf("Ошибка инициализации Базы Данных: \n%v", err)
 	}
 
-	//инициализация смпт сервера для отправки Email Warning
-	smtp := mail_send.NewGmailSender(cfg.SMTP.Name,
-		cfg.SMTP.Email_address,
-		cfg.SMTP.Email_password,
-		cfg.SMTP.Server_address,
-		cfg.SMTP.Auth_address)
-
-	//инициализация jwt сервиса
-	jwtService := jwt_service.InitJWT()
-
 	//инициализация сервисного слоя
-	service := service.ServiceInit(logger.Logrus,
-		repo,
-		jwtService,
-		smtp,
-		[]byte(cfg.Jwt.JwtKey),
-		cfg.Token.AccessTokenDuration,
-		cfg.Token.RefreshTokenDuration)
+	services := services.NewService(repo, cfg)
+	newController := controllers.NewController(services, logger)
 
 	// инициализация сервера
-	server := server.Init(cfg.Server.Port, service)
-	// обработка енд поинтов
-	server.Routes()
+	router := router.NewRouter(cfg, newController)
+	router.SetRoutes()
 
-	// Запуск сервера на порту 8080
-	if err := server.Echo.Start(cfg.Server.Port); err != nil {
-		log.Fatal("Ошибка при запуске сервера:", err)
+	newServer := &http.Server{
+		Addr:    ":" + cfg.Server.Port,
+		Handler: router.Gin,
 	}
+
+	// Start the server in a separate goroutine
+	go func() {
+		if err := newServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server start failed: %s\n", err)
+		}
+	}()
+	log.Println("Server started successfully")
+
+	// Set up signal catching
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutdown initiated...")
+
+	// Context for graceful shutdown with a timeout of 3 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Attempt to gracefully shutdown the server
+	if err := newServer.Shutdown(ctx); err != nil {
+		log.Printf("Server Shutdown Error: %v", err)
+	}
+
+	// Waiting for the shutdown context to be done or timeout
+	select {
+	case <-ctx.Done():
+		log.Println("Server shutdown completed or timed out")
+	}
+
+	log.Println("Server exiting")
+	os.Exit(0)
 }
